@@ -1,0 +1,3 @@
+[submodule "bmv2"]
+	path = bmv2
+	url = https://github.com/simbricks/bmv2.git
