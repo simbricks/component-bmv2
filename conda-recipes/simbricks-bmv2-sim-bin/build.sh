@@ -1,3 +1,4 @@
+#!/bin/bash
 # MIT License
 
 # Copyright (c) 2026 SimBricks
@@ -20,20 +21,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-# Shared variables consumed by every recipe in this repo via
-#   conda build -m conda-recipes/conda_build_config.yaml <recipe>
-#
-# NOTE: simbricks_version is the single source of truth for the conda package
-# versions built from this repo and the internal bin -> python `==` pin (the
-# simbricks-bmv2-sim-bin recipe pins the simbricks-bmv2-sim-py package it is
-# co-built with to this exact version). It MUST stay in sync with the version in
-# bmv2_sim_py/pyproject.toml (that file drives the actual version of the built
-# python wheel). External dependencies (e.g. simbricks-lib) are NOT tied to this
-# version; they carry their own `>=` bounds since they release independently.
+set -euo pipefail
 
-simbricks_version:
-  - "0.4.2"
-homepage:
-  - "https://www.simbricks.io/"
-github_org:
-  - "https://github.com/simbricks/simbricks"
+# conda-build copies the worktree into its own source dir, so any configure/build
+# state from a local `make bmv2-build` comes along with it. Drop it so we
+# configure and compile cleanly against the conda toolchain and prefix.
+make bmv2-clean || true
+
+# Reuse the Makefile so build+install logic lives in one place. Host deps
+# (simbricks-lib headers/lib, thrift, boost, gmp, pcap) are in $PREFIX during the
+# build; the Makefile installs everything under $PREFIX/opt/bmv2.
+make bmv2-install \
+  PREFIX="${PREFIX}" \
+  BMV2_JOBS="${CPU_COUNT}" \
+  SIMBRICKS_INC_DIR="${PREFIX}/include" \
+  SIMBRICKS_LIB_DIR="${PREFIX}/lib"

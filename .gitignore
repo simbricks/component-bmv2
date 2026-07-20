@@ -1,1 +1,9 @@
 __pycache__/
+*.egg-info/
+dist/
+
+# Local `make bmv2-install PREFIX=$PWD/install` output
+/install/
+
+# Local `make conda-packages OUTPUT_FOLDER=./conda-out` output
+/conda-out/
