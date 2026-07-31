@@ -30,7 +30,7 @@ from simbricks.orchestration.instantiation import base as inst_base
 from simbricks.orchestration.simulation import base as sim_base
 from simbricks.orchestration.simulation import net as sim_net
 from simbricks.orchestration.system import eth as sys_eth
-from simbricks.utils import base as utils_base
+from simbricks.utils import base as utils_base, file as utils_file
 
 
 class BMV2Net(sim_net.NetSim):
@@ -42,25 +42,9 @@ class BMV2Net(sim_net.NetSim):
         executable: str | None = None,
         p4_path: str | None = None,
     ) -> None:
-        # The switch and the example P4 program are installed side by side. With
-        # the simbricks-bmv2-sim-bin conda package they live under $CONDA_PREFIX;
-        # $BMV2_PREFIX overrides that for a local `make bmv2-install PREFIX=<p>`,
-        # where it should be set to <p>/opt.
-        bmv2_prefix = os.environ.get("BMV2_PREFIX")
-        if bmv2_prefix is not None:
-            base = f"{bmv2_prefix}/"
-        else:
-            conda_prefix = os.environ.get("CONDA_PREFIX", "")
-            base = f"{conda_prefix}/opt/"
-
-        if executable is None:
-            executable = f"{base}bmv2/bin/simple_switch"
-        if p4_path is None:
-            p4_path = f"{base}bmv2/share/p4/basic.json"
-
         super().__init__(
             simulation=simulation,
-            executable=executable,
+            executable="" if executable is None else executable,
         )
         self.p4_path: str = p4_path
 
@@ -93,8 +77,10 @@ class BMV2Net(sim_net.NetSim):
         if len(listen) > 0:
             raise Exception("BMV2Net does currently not support listening sockets")
 
+        resolve_exe = utils_file.build_path_resolver("opt", "BMV2_PREFIX", None, "bmv2/bin/simple_switch")
+        exe = resolve_exe(self._executable)
         cmd = (
-            f"{self._executable}"
+            f"{exe}"
             f" --use-simbricks --sync-interval {sync_period}"
             f" --link-latency {eth_latency}"
         )
@@ -108,6 +94,10 @@ class BMV2Net(sim_net.NetSim):
             cmd += f" -i {port}@{sock._path}"
 
         # The compiled P4 program is a required positional argument.
-        cmd += f" {self.p4_path}"
+        resolve_p4_path = utils_file.build_path_resolver(
+            "opt", "BMV2_PREFIX", None, "bmv2/share/p4/basic.json"
+        )
+        p4p = resolve_p4_path(self.p4_path)
+        cmd += f" {p4p}"
 
         return cmd
