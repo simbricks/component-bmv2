@@ -81,8 +81,8 @@ class BMV2Net(sim_net.NetSim):
         exe = resolve_exe(self._executable)
         cmd = (
             f"{exe}"
-            f" --use-simbricks --sync-interval {sync_period}"
-            f" --link-latency {eth_latency}"
+            f" --use-simbricks --sync-interval {sync_period.picoseconds}"
+            f" --link-latency {eth_latency.picoseconds}"
         )
 
         if run_sync:
