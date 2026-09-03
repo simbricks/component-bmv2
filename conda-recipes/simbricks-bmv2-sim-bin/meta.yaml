@@ -49,8 +49,8 @@ requirements:
     # The `thrift` IDL compiler, invoked by the generated makefile rules to produce
     # the C++ and python runtime stubs.
     - thrift-compiler
-  host:
     - python >=3.10
+  host:
     - simbricks-lib >=0.5.0      # headers + libsimbricks for the <simbricks/...> build
     - thrift-cpp
     - libboost-devel
